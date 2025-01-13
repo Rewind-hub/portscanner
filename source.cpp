@@ -80,9 +80,15 @@ void scan_port(const std::string& host, int port, std::vector<int>& open_ports) 
     closesocket(sock);
 }
 
+void scan_ports_range(const std::string& host, int start_port, int end_port, std::vector<int>& open_ports) {
+    for (int port = start_port; port <= end_port; ++port) {
+        scan_port(host, port, open_ports);
+    }
+}
+
 void port_scanner() {
     std::string host;
-    int start_port, end_port;
+    int start_port, end_port, num_threads;
 
     set_console_color(CYAN);
     std::cout << R"(
@@ -110,14 +116,36 @@ void port_scanner() {
     std::cout << "[>] Enter the ending port (e.g., 65535): ";
     set_console_color(RESET);
     std::cin >> end_port;
+    set_console_color(YELLOW);
+    std::cout << "[>] Enter the number of threads to use: ";
+    set_console_color(RESET);
+    std::cin >> num_threads;
 
     std::vector<int> open_ports;
     set_console_color(CYAN);
-    std::cout << "\n[*] Scanning " << host << " for open ports from " << start_port << " to " << end_port << "...\n";
+    std::cout << "\n[*] Scanning " << host << " for open ports from " << start_port << " to " << end_port << " using " << num_threads << " threads...\n";
     set_console_color(RESET);
 
-    for (int port = start_port; port <= end_port; ++port) {
-        scan_port(host, port, open_ports);
+    int range_per_thread = (end_port - start_port + 1) / num_threads;
+    int remainder = (end_port - start_port + 1) % num_threads;
+
+    std::vector<std::thread> threads;
+
+    int current_start_port = start_port;
+    for (int i = 0; i < num_threads; ++i) {
+        int current_end_port = current_start_port + range_per_thread - 1;
+        if (remainder > 0) {
+            current_end_port++;
+            remainder--;
+        }
+
+        threads.push_back(std::thread(scan_ports_range, host, current_start_port, current_end_port, std::ref(open_ports)));
+
+        current_start_port = current_end_port + 1;
+    }
+
+    for (auto& t : threads) {
+        t.join();
     }
 
     set_console_color(CYAN);
