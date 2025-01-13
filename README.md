@@ -1,7 +1,7 @@
 # Portscanner - Rewind.hub
 This is Rewind.hub's open source portscanner tool, it is made quickly, easy and fast in CPP. It is open source so do as u may but please give us credit for the tool if u want to leak it out to others.
 
-- Current Version: 1.0.0
+- Current Version: 1.1.3
 - Developers: [@hash](https://github.com/realhash)
 - Languages: C++
 
